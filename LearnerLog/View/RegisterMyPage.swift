@@ -107,22 +107,6 @@ struct RegisterMyPage: View {
                         .font(.title3)
                         .fontWeight(.bold)
                 }
-//                ToolbarItem(placement: .navigationBarTrailing) {
-//                    Button("등록") {
-//                        let imageData = inputImage?.jpegData(compressionQuality: 0.8)
-//                        let profile = UserProfile(
-//                            profileImageData: imageData,
-//                            nickName: nickName,
-//                            realName: realName,
-//                            session: selectedSession,
-//                            field: selectedField,
-//                            mbti: selectedMBTI?.rawValue,
-//                            socialStyle: selectedSocialStyle?.rawValue
-//                        )
-//                        modelContext.insert(profile)
-//                        navigate = true
-//                    }
-//                }
             }
         }
     }

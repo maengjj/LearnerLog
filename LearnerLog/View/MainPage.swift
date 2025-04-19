@@ -6,11 +6,14 @@
 //
 
 import SwiftUI
+import SwiftData
 
 struct MainPage: View {
     @State private var isPresentingAddLearner = false
     @State private var navigateToMyPage = false
     @State private var searchText = ""
+    
+    @Query var profiles: [LearnerProfile]
 
     var body: some View {
         NavigationStack {
@@ -20,20 +23,8 @@ struct MainPage: View {
                 // 스크롤뷰
                 ScrollView {
                     LazyVGrid(columns: Array(repeating: GridItem(.flexible()), count: 3), spacing: 20) {
-                        ForEach(0..<24) { index in
-                            VStack {
-                                Circle()
-                                    .fill(Color.white)
-                                    .frame(width: 80, height: 80)
-                                    .overlay(
-                                        Image(uiImage: UIImage(named: "defaultIcon") ?? UIImage())
-                                            .resizable()
-                                            .scaledToFit()
-                                            .padding(10)
-                                    )
-                                Text(index == 4 ? "Bob" : index == 11 ? "Dewy" : "???")
-                                    .font(.caption)
-                            }
+                        ForEach(profiles) { profile in
+                            LearnerCircleView(profile: profile)
                         }
                     }
 //                    .padding()
@@ -76,6 +67,36 @@ struct MainPage: View {
             }
         }
         
+    }
+}
+
+struct LearnerCircleView: View {
+    var profile: LearnerProfile
+
+    var body: some View {
+        VStack {
+            Circle()
+                .fill(Color.white)
+                .frame(width: 80, height: 80)
+                .overlay(
+                    Group {
+                        if let data = profile.profileImageData, let uiImage = UIImage(data: data) {
+                            Image(uiImage: uiImage)
+                                .resizable()
+                                .scaledToFit()
+                                .padding(10)
+                        } else {
+                            Image(systemName: "person.crop.circle.fill")
+                                .resizable()
+                                .scaledToFit()
+                                .foregroundColor(.gray)
+                                .padding(15)
+                        }
+                    }
+                )
+            Text(profile.nickName)
+                .font(.caption)
+        }
     }
 }
 

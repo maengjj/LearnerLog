@@ -25,6 +25,11 @@ struct AddLearnerPage: View {
     @State private var showingImagePicker = false
     @State private var inputImage: UIImage?
     
+    @State private var customFields: [LearnerProfile.CustomField] = []
+    @State private var newLabel: String = ""
+    @State private var newValue: String = ""
+    @State private var isAddingCustomField: Bool = false
+    
     let fieldOptions = ["테크", "디자인", "비지니스", "기타"]
     
     var body: some View {
@@ -168,23 +173,63 @@ struct AddLearnerPage: View {
                                 }
                             }
                         }
-//                        .frame(height: 500)
                         .scrollDisabled(true)
-                        .frame(height:380)
+                        .frame(height: 380)
 
-//                        Button(action: {
-//                            navigate = true
-//                        }) {
-//                            Text("등록")
-//                                .foregroundColor(.white)
-//                                .font(.title3)
-//                                .bold()
-//                                .frame(maxWidth: .infinity, minHeight: 54)
-//                                .background(Color.accent)
-//                                .cornerRadius(10)
-//                                .padding(.horizontal)
-//                        }
-//                        .buttonStyle(.automatic)
+                        List {
+                            Section(header: Text("사용자 정의 항목")) {
+                                ForEach(customFields.indices, id: \.self) { index in
+                                    VStack(alignment: .leading) {
+                                        Text(customFields[index].label)
+                                            .font(.subheadline)
+                                            .foregroundColor(.secondary)
+                                        Text(customFields[index].value)
+                                            .font(.body)
+                                    }
+                                }
+                                .onDelete { indexSet in
+                                    customFields.remove(atOffsets: indexSet)
+                                }
+
+                                if isAddingCustomField {
+                                    VStack {
+                                        HStack {
+                                            TextField("GQ", text: $newLabel)
+                                            TextField("GA", text: $newValue)
+                                        }
+                                        HStack {
+                                            Spacer()
+                                            Button("저장") {
+                                                guard !newLabel.isEmpty && !newValue.isEmpty else { return }
+                                                customFields.append(LearnerProfile.CustomField(label: newLabel, value: newValue))
+                                                newLabel = ""
+                                                newValue = ""
+                                                isAddingCustomField = false
+                                            }
+                                            .buttonStyle(.borderedProminent)
+                                            Spacer()
+
+                                            Button("취소") {
+                                                isAddingCustomField = false
+                                                newLabel = ""
+                                                newValue = ""
+                                            }
+                                            .buttonStyle(.bordered)
+                                            Spacer()
+                                        }
+                                    }
+                                }
+
+                                Button(action: {
+                                    isAddingCustomField = true
+                                }) {
+                                    Label("항목 추가", systemImage: "plus.circle")
+                                }
+                            }
+                        }
+                        .frame(minHeight: CGFloat(200 + customFields.count * 60))
+                        .scrollDisabled(true)
+                        .padding(.horizontal, 0)
                     }
                 }
             }
@@ -200,32 +245,30 @@ struct AddLearnerPage: View {
             .navigationBarBackButtonHidden(true)
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
-                    Button(action: {
+                    Button("취소") {
                         dismiss()
-                    }) {
-                        Image(systemName: "chevron.left")
-                            .foregroundColor(.accentColor)
                     }
                 }
                 ToolbarItem(placement: .principal) {
-                    Text("내 프로필")
+                    Text("프로필 등록")
                         .font(.title3)
                         .fontWeight(.bold)
                 }
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button("등록") {
                         let imageData = inputImage?.jpegData(compressionQuality: 0.8)
-                        let profile = UserProfile(
+                        let profile = LearnerProfile(
                             profileImageData: imageData,
                             nickName: nickName,
                             realName: realName,
                             session: selectedSession,
                             field: selectedField,
                             mbti: selectedMBTI?.rawValue,
-                            socialStyle: selectedSocialStyle?.rawValue
+                            socialStyle: selectedSocialStyle?.rawValue,
+                            customFields: customFields
                         )
                         modelContext.insert(profile)
-                        navigate = true
+                        dismiss()
                     }
                 }
             }
@@ -240,6 +283,11 @@ struct AddLearnerPage: View {
         guard let inputImage = inputImage else { return }
         profileImage = Image(uiImage: inputImage)
     }
+}
+
+struct CustomField: Codable, Hashable {
+    var label: String
+    var value: String
 }
 
 #Preview {

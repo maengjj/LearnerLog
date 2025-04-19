@@ -16,7 +16,7 @@ struct LearnerLogApp: App {
         WindowGroup {
             AppRootView()
                 .environmentObject(appState)
-                .modelContainer(for: [UserProfile.self])
+                .modelContainer(for: [UserProfile.self, LearnerProfile.self])
         }
     }
 }
