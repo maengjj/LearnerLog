@@ -10,7 +10,7 @@ import SwiftData
 import UIKit
 
 struct LearnerPage: View {
-    @Query var profiles: [LearnerProfile]
+    var profile: LearnerProfile
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
 
@@ -24,6 +24,10 @@ struct LearnerPage: View {
     @State private var showingImagePicker = false
     @State private var inputImage: UIImage?
     @State private var isEditing = false
+    
+    @State private var isAddingCustomField = false
+    @State private var newLabel: String = ""
+    @State private var newValue: String = ""
 
     var body: some View {
         NavigationStack {
@@ -31,35 +35,88 @@ struct LearnerPage: View {
                 Color(.systemGroupedBackground)
                     .ignoresSafeArea()
 
-                if let profile = profiles.first {
-                    ScrollView {
-                        ProfileForm(
-                            nickName: $nickName,
-                            realName: $realName,
-                            selectedSession: $selectedSession,
-                            selectedField: $selectedField,
-                            selectedMBTI: $selectedMBTI,
-                            selectedSocialStyle: $selectedSocialStyle,
-                            profileImage: $profileImage,
-                            showingImagePicker: $showingImagePicker,
-                            inputImage: $inputImage,
-                            isEditing: isEditing
-                        )
-                        .onAppear {
-                            nickName = profile.nickName
-                            realName = profile.realName
-                            selectedSession = profile.session
-                            selectedField = profile.field
-                            selectedMBTI = MBTI(rawValue: profile.mbti ?? "")
-                            selectedSocialStyle = socialStyle(rawValue: profile.socialStyle ?? "")
-                            if let data = profile.profileImageData,
-                               let uiImage = UIImage(data: data) {
-                                profileImage = Image(uiImage: uiImage)
+                ScrollView {
+                    ProfileForm(
+                        nickName: $nickName,
+                        realName: $realName,
+                        selectedSession: $selectedSession,
+                        selectedField: $selectedField,
+                        selectedMBTI: $selectedMBTI,
+                        selectedSocialStyle: $selectedSocialStyle,
+                        profileImage: $profileImage,
+                        showingImagePicker: $showingImagePicker,
+                        inputImage: $inputImage,
+                        isEditing: isEditing
+                    )
+                    .onAppear {
+                        nickName = profile.nickName
+                        realName = profile.realName
+                        selectedSession = profile.session
+                        selectedField = profile.field
+                        selectedMBTI = MBTI(rawValue: profile.mbti ?? "")
+                        selectedSocialStyle = socialStyle(rawValue: profile.socialStyle ?? "")
+                        if let data = profile.profileImageData,
+                           let uiImage = UIImage(data: data) {
+                            profileImage = Image(uiImage: uiImage)
+                        }
+                    }
+                    
+                    List {
+                        Section(header: Text("사용자 정의 항목")) {
+                            ForEach(profile.customFields.indices, id: \.self) { index in
+                                VStack(alignment: .leading) {
+                                    Text(profile.customFields[index].label)
+                                        .font(.subheadline)
+                                        .foregroundColor(.secondary)
+                                    Text(profile.customFields[index].value)
+                                        .font(.body)
+                                }
+                            }
+                            .onDelete(perform: isEditing ? { indexSet in
+                                profile.customFields.remove(atOffsets: indexSet)
+                            } : nil)
+
+                            if isAddingCustomField {
+                                VStack {
+                                    HStack {
+                                        TextField("GQ", text: $newLabel)
+                                        TextField("GA", text: $newValue)
+                                    }
+                                    HStack {
+                                        Spacer()
+                                        Button("저장") {
+                                            guard !newLabel.isEmpty && !newValue.isEmpty else { return }
+                                            profile.customFields.append(LearnerProfile.CustomField(label: newLabel, value: newValue))
+                                            newLabel = ""
+                                            newValue = ""
+                                            isAddingCustomField = false
+                                        }
+                                        .buttonStyle(.borderedProminent)
+                                        Spacer()
+
+                                        Button("취소") {
+                                            isAddingCustomField = false
+                                            newLabel = ""
+                                            newValue = ""
+                                        }
+                                        .buttonStyle(.bordered)
+                                        Spacer()
+                                    }
+                                }
+                            }
+
+                            if isEditing {
+                                Button(action: {
+                                    isAddingCustomField = true
+                                }) {
+                                    Label("항목 추가", systemImage: "plus.circle")
+                                }
                             }
                         }
                     }
-                } else {
-                    Text("등록된 러너 프로필이 없습니다.")
+                    .frame(minHeight: CGFloat(200 + profile.customFields.count * 60))
+                    .scrollDisabled(true)
+                    .padding(.horizontal, 0)
                 }
             }
             .onTapGesture {
@@ -76,7 +133,7 @@ struct LearnerPage: View {
                 }
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button(isEditing ? "완료" : "수정") {
-                        if isEditing, let profile = profiles.first {
+                        if isEditing {
                             profile.nickName = nickName
                             profile.realName = realName
                             profile.session = selectedSession
@@ -111,7 +168,14 @@ struct LearnerPage: View {
 }
 
 #Preview {
-    LearnerPage()
-        .modelContainer(for: LearnerProfile.self)
+    LearnerPage(profile: LearnerProfile(
+        profileImageData: nil,
+        nickName: "미리보기",
+        realName: "홍길동",
+        session: "봄",
+        field: "iOS",
+        mbti: nil,
+        socialStyle: nil
+    ))
+    .modelContainer(for: LearnerProfile.self)
 }
-

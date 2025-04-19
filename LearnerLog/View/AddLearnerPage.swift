@@ -58,7 +58,7 @@ struct AddLearnerPage: View {
                                                     .resizable()
                                                     .scaledToFit()
                                                     .foregroundColor(.gray)
-                                                    .padding(15)
+//                                                    .padding(15)
                                             )
                                     }
                                 }

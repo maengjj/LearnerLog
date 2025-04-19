@@ -12,19 +12,22 @@ struct MainPage: View {
     @State private var isPresentingAddLearner = false
     @State private var navigateToMyPage = false
     @State private var searchText = ""
+    @State private var selectedProfile: LearnerProfile?
     
     @Query var profiles: [LearnerProfile]
 
     var body: some View {
         NavigationStack {
             VStack(alignment: .leading, spacing: 10) {
-                // Removed HStack containing the logo and icons
-
-                // 스크롤뷰
                 ScrollView {
                     LazyVGrid(columns: Array(repeating: GridItem(.flexible()), count: 3), spacing: 20) {
                         ForEach(profiles) { profile in
-                            LearnerCircleView(profile: profile)
+                            Button {
+                                selectedProfile = profile
+                            } label: {
+                                LearnerCircleView(profile: profile)
+                            }
+                            .buttonStyle(.plain)
                         }
                     }
 //                    .padding()
@@ -34,6 +37,9 @@ struct MainPage: View {
             
             .sheet(isPresented: $isPresentingAddLearner) {
                 AddLearnerPage()
+            }
+            .sheet(item: $selectedProfile) { profile in
+                LearnerPage(profile: profile)
             }
             .navigationDestination(isPresented: $navigateToMyPage) {
                 MyPage()
@@ -77,25 +83,27 @@ struct LearnerCircleView: View {
         VStack {
             Circle()
                 .fill(Color.white)
-                .frame(width: 80, height: 80)
+                .frame(width: 95, height: 95)
                 .overlay(
                     Group {
                         if let data = profile.profileImageData, let uiImage = UIImage(data: data) {
                             Image(uiImage: uiImage)
                                 .resizable()
-                                .scaledToFit()
-                                .padding(10)
+                                .scaledToFill()
+                                .frame(width: 95, height: 95)
+                                .clipShape(Circle())
                         } else {
                             Image(systemName: "person.crop.circle.fill")
                                 .resizable()
                                 .scaledToFit()
                                 .foregroundColor(.gray)
-                                .padding(15)
+//                                .padding(15)
                         }
                     }
                 )
             Text(profile.nickName)
-                .font(.caption)
+                .font(.subheadline)
+                .fontWeight(.bold)
         }
     }
 }
