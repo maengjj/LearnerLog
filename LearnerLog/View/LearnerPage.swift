@@ -24,6 +24,7 @@ struct LearnerPage: View {
     @State private var showingImagePicker = false
     @State private var inputImage: UIImage?
     @State private var isEditing = false
+    @State private var showDeleteConfirmation = false
     
     @State private var isAddingCustomField = false
     @State private var newLabel: String = ""
@@ -62,7 +63,7 @@ struct LearnerPage: View {
                     }
                     
                     List {
-                        Section(header: Text("사용자 정의 항목")) {
+                        Section(header: Text("로그 더하기")) {
                             ForEach(profile.customFields.indices, id: \.self) { index in
                                 VStack(alignment: .leading) {
                                     Text(profile.customFields[index].label)
@@ -117,6 +118,29 @@ struct LearnerPage: View {
                     .frame(minHeight: CGFloat(200 + profile.customFields.count * 60))
                     .scrollDisabled(true)
                     .padding(.horizontal, 0)
+
+                    if isEditing {
+                        HStack {
+                            Spacer()
+                            Button(role: .destructive) {
+                                showDeleteConfirmation = true
+                            } label: {
+                                Text("삭제하기")
+                                    .font(.footnote)
+                                    .foregroundColor(.red)
+                                    .padding(.trailing, 20)
+                                    .padding(.top, 8)
+                            }
+                            .alert("\(nickName)와(과)의 추억이 사라집니다. 정말 삭제하시겠습니까?", isPresented: $showDeleteConfirmation) {
+                                Button("취소", role: .cancel) {}
+                                Button("삭제", role: .destructive) {
+                                    modelContext.delete(profile)
+                                    dismiss()
+                                }
+                            }
+                            
+                        }
+                    }
                 }
             }
             .onTapGesture {

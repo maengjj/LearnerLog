@@ -24,11 +24,33 @@ struct AddLearnerPage: View {
     @State private var profileImage: Image? = nil
     @State private var showingImagePicker = false
     @State private var inputImage: UIImage?
+    @State private var showDuplicateAlert = false
+    @State private var showSelfRegisterAlert = false
+    
+    @Query var userProfiles: [UserProfile]
     
     @State private var customFields: [LearnerProfile.CustomField] = []
     @State private var newLabel: String = ""
     @State private var newValue: String = ""
     @State private var isAddingCustomField: Bool = false
+    
+    @State private var showUnknownRunnerAlert = false
+
+    let baseNicknames: [String] = ["Air", "Alex", "Angle", "Anne", "Ari", "Avery", "Baba", "Bear", "Berry", "Bin", "Bob", "Bota", "Brandnew", "Cerin", "Cherry", "Cheshire", "Chloe", "Coulson", "Daniely", "Dean",
+        "Demian", "Dewy", "Dodin", "Echo", "Eddey", "Eifer", "Elena", "Elian", "Ell", "Ella", "Elphie", "Emma", "Enoch",
+        "Erin", "Ethan", "Evan", "Excellenty", "Fine", "Finn", "Frank", "Gabi", "Gigi", "Gil", "Glowny", "Go", "Green",
+        "Gus", "Gyeong", "Hama", "Happyjay", "Hari", "Henry", "Heggy", "Herry", "Hevyn", "Hidy", "Hong", "Hyun", "Ian",
+        "il", "Isa", "Isla", "Ito", "Ivy", "J", "Jack", "Jacob", "Jaeryong", "Jam", "Jeje", "Jenki", "Jenna", "Jeong",
+        "Jerry", "Jin", "Jina", "Joid", "Jomi", "Jooni", "Joy", "Judyj", "Julianne", "Jun", "Jung", "Junia", "Kadan",
+        "Kaia", "Karyn", "Kave", "Ken", "Kinder", "Kirby", "Kon", "Kwangro", "Lemon", "Leo", "leon", "Libby", "Lina",
+        "Loa", "Lucas", "Luka", "Luke", "Martin", "Mary", "May", "Min", "Minbol", "Mingky", "Mini", "Miru", "Monica",
+        "Moo", "Mosae", "Mumin", "Murphy", "My", "Nayl", "Nell", "Nika", "Nike", "Noah", "Noter", "Nyx", "Oliver", "One",
+        "Onething", "Paidion", "Paran", "Paduck", "Peppr", "Pherd", "Powel", "Pray", "Presence", "Rama", "Ria", "Riel",
+        "Rohd", "Romak", "Root", "Rundo", "Sally", "Sana", "Sandeul", "Sena", "Seo", "Sera", "Simi", "Singsing", "Sky",
+        "Skyler", "Snow", "Soop", "Ssol", "Steve", "Taeni", "Taki", "Ted", "Tether", "Theo", "Three", "Velko", "Viera",
+        "Wade", "Weaver", "Wendy", "Way", "Wish", "Wonjun", "Woody", "Yan", "Yeony", "Yoon", "Yoshi", "Yuha", "Yuu",
+        "Zani", "Zhen", "Zigu"
+    ]
     
     let fieldOptions = ["테크", "디자인", "비지니스", "기타"]
     
@@ -58,7 +80,6 @@ struct AddLearnerPage: View {
                                                     .resizable()
                                                     .scaledToFit()
                                                     .foregroundColor(.gray)
-//                                                    .padding(15)
                                             )
                                     }
                                 }
@@ -177,7 +198,7 @@ struct AddLearnerPage: View {
                         .frame(height: 380)
 
                         List {
-                            Section(header: Text("사용자 정의 항목")) {
+                            Section(header: Text("로그 더하기")) {
                                 ForEach(customFields.indices, id: \.self) { index in
                                     VStack(alignment: .leading) {
                                         Text(customFields[index].label)
@@ -239,6 +260,30 @@ struct AddLearnerPage: View {
             .sheet(isPresented: $showingImagePicker, onDismiss: loadImage) {
                 ImagePicker(image: $inputImage)
             }
+            .alert("이미 등록된 러너입니다.", isPresented: $showDuplicateAlert) {
+                Button("확인", role: .cancel) { }
+            }
+            .alert("자기 자신은 러너로 등록할 수 없습니다.", isPresented: $showSelfRegisterAlert) {
+                Button("확인", role: .cancel) { }
+            }
+            .alert("\(nickName)은(는) 4기 러너가 아니에요! 그래도 등록하시겠습니까?", isPresented: $showUnknownRunnerAlert) {
+                Button("취소", role: .cancel) { }
+                Button("등록", role: .destructive) {
+                    let imageData = inputImage?.jpegData(compressionQuality: 0.8)
+                    let profile = LearnerProfile(
+                        profileImageData: imageData,
+                        nickName: nickName,
+                        realName: realName,
+                        session: selectedSession,
+                        field: selectedField,
+                        mbti: selectedMBTI?.rawValue,
+                        socialStyle: selectedSocialStyle?.rawValue,
+                        customFields: customFields
+                    )
+                    modelContext.insert(profile)
+                    dismiss()
+                }
+            }
             .navigationDestination(isPresented: $navigate) {
                 MainPage()
             }
@@ -250,25 +295,43 @@ struct AddLearnerPage: View {
                     }
                 }
                 ToolbarItem(placement: .principal) {
-                    Text("프로필 등록")
+                    Text("러너 등록")
                         .font(.title3)
                         .fontWeight(.bold)
                 }
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button("등록") {
-                        let imageData = inputImage?.jpegData(compressionQuality: 0.8)
-                        let profile = LearnerProfile(
-                            profileImageData: imageData,
-                            nickName: nickName,
-                            realName: realName,
-                            session: selectedSession,
-                            field: selectedField,
-                            mbti: selectedMBTI?.rawValue,
-                            socialStyle: selectedSocialStyle?.rawValue,
-                            customFields: customFields
-                        )
-                        modelContext.insert(profile)
-                        dismiss()
+                        do {
+                            let existingProfiles = try modelContext.fetch(FetchDescriptor<LearnerProfile>())
+                            let existingNicknames = existingProfiles.map { $0.nickName }
+
+                            if existingNicknames.contains(nickName) {
+                                showDuplicateAlert = true
+                            } else if let currentUser = userProfiles.first, currentUser.nickName == nickName {
+                                showSelfRegisterAlert = true
+                                return
+                            } else if !baseNicknames.contains(nickName) {
+                                showUnknownRunnerAlert = true
+                                return
+                            }
+                            else {
+                                let imageData = inputImage?.jpegData(compressionQuality: 0.8)
+                                let profile = LearnerProfile(
+                                    profileImageData: imageData,
+                                    nickName: nickName,
+                                    realName: realName,
+                                    session: selectedSession,
+                                    field: selectedField,
+                                    mbti: selectedMBTI?.rawValue,
+                                    socialStyle: selectedSocialStyle?.rawValue,
+                                    customFields: customFields
+                                )
+                                modelContext.insert(profile)
+                                dismiss()
+                            }
+                        } catch {
+                            print("Failed to fetch profiles: \(error)")
+                        }
                     }
                 }
             }

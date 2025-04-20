@@ -9,6 +9,28 @@ import SwiftUI
 import SwiftData
 import UIKit
 
+extension Color {
+    init(hex: String) {
+        let hex = hex.trimmingCharacters(in: CharacterSet.alphanumerics.inverted)
+        var int: UInt64 = 0
+        Scanner(string: hex).scanHexInt64(&int)
+        let r, g, b: Double
+
+        switch hex.count {
+        case 6:
+            r = Double((int >> 16) & 0xFF) / 255
+            g = Double((int >> 8) & 0xFF) / 255
+            b = Double(int & 0xFF) / 255
+        default:
+            r = 1
+            g = 1
+            b = 1
+        }
+
+        self.init(red: r, green: g, blue: b)
+    }
+}
+
 struct MyPage: View {
     @Query var profiles: [UserProfile]
     @Environment(\.modelContext) private var modelContext
@@ -26,6 +48,39 @@ struct MyPage: View {
     @State private var isEditing = false
     @State private var showDeleteConfirmation = false
     @AppStorage("hasCompletedOnboarding") private var hasCompletedOnboarding = true
+    
+    var collectionProgress: CGFloat {
+        guard let profile = profiles.first else { return 0 }
+
+        let baseNicknames: Set<String> = [
+            "Air", "Alex", "Angle", "Anne", "Ari", "Avery", "Baba", "Bear", "Berry", "Bin", "Bob", "Bota", "Brandnew", "Cerin", "Cherry", "Cheshire", "Chloe", "Coulson", "Daniely", "Dean",
+            "Demian", "Dewy", "Dodin", "Echo", "Eddey", "Eifer", "Elena", "Elian", "Ell", "Ella", "Elphie", "Emma", "Enoch",
+            "Erin", "Ethan", "Evan", "Excellenty", "Fine", "Finn", "Frank", "Gabi", "Gigi", "Gil", "Glowny", "Go", "Green",
+            "Gus", "Gyeong", "Hama", "Happyjay", "Hari", "Henry", "Heggy", "Herry", "Hevyn", "Hidy", "Hong", "Hyun", "Ian",
+            "il", "Isa", "Isla", "Ito", "Ivy", "J", "Jack", "Jacob", "Jaeryong", "Jam", "Jeje", "Jenki", "Jenna", "Jeong",
+            "Jerry", "Jin", "Jina", "Joid", "Jomi", "Jooni", "Joy", "Judyj", "Julianne", "Jun", "Jung", "Junia", "Kadan",
+            "Kaia", "Karyn", "Kave", "Ken", "Kinder", "Kirby", "Kon", "Kwangro", "Lemon", "Leo", "leon", "Libby", "Lina",
+            "Loa", "Lucas", "Luka", "Luke", "Martin", "Mary", "May", "Min", "Minbol", "Mingky", "Mini", "Miru", "Monica",
+            "Moo", "Mosae", "Mumin", "Murphy", "My", "Nayl", "Nell", "Nika", "Nike", "Noah", "Noter", "Nyx", "Oliver", "One",
+            "Onething", "Paidion", "Paran", "Paduck", "Peppr", "Pherd", "Powel", "Pray", "Presence", "Rama", "Ria", "Riel",
+            "Rohd", "Romak", "Root", "Rundo", "Sally", "Sana", "Sandeul", "Sena", "Seo", "Sera", "Simi", "Singsing", "Sky",
+            "Skyler", "Snow", "Soop", "Ssol", "Steve", "Taeni", "Taki", "Ted", "Tether", "Theo", "Three", "Velko", "Viera",
+            "Wade", "Weaver", "Wendy", "Way", "Wish", "Wonjun", "Woody", "Yan", "Yeony", "Yoon", "Yoshi", "Yuha", "Yuu",
+            "Zani", "Zhen", "Zigu"
+        ]
+
+        let learners = (try? modelContext.fetch(FetchDescriptor<LearnerProfile>())) ?? []
+
+        var uniqueNames = Set(learners.map { $0.nickName })
+
+        // Include current user
+        uniqueNames.insert(profile.nickName)
+
+        let matched = uniqueNames.intersection(baseNicknames)
+        let total = baseNicknames.count
+
+        return CGFloat(matched.count) / CGFloat(total)
+    }
 
     var body: some View {
         NavigationStack {
@@ -35,6 +90,24 @@ struct MyPage: View {
                 
                 if let profile = profiles.first {
                     let nickname = profile.nickName
+                    let baseNicknames: Set<String> = [
+                        "Demian", "Dewy", "Dodin", "Echo", "Eddey", "Eifer", "Elena", "Elian", "Ell", "Ella", "Elphie", "Emma", "Enoch",
+                        "Erin", "Ethan", "Evan", "Excellenty", "Fine", "Finn", "Frank", "Gabi", "Gigi", "Gil", "Glowny", "Go", "Green",
+                        "Gus", "Gyeong", "Hama", "Happyjay", "Hari", "Henry", "Heggy", "Herry", "Hevyn", "Hidy", "Hong", "Hyun", "Ian",
+                        "il", "Isa", "Isla", "Ito", "Ivy", "J", "Jack", "Jacob", "Jaeryong", "Jam", "Jeje", "Jenki", "Jenna", "Jeong",
+                        "Jerry", "Jin", "Jina", "Joid", "Jomi", "Jooni", "Joy", "Judyj", "Julianne", "Jun", "Jung", "Junia", "Kadan",
+                        "Kaia", "Karyn", "Kave", "Ken", "Kinder", "Kirby", "Kon", "Kwangro", "Lemon", "Leo", "leon", "Libby", "Lina",
+                        "Loa", "Lucas", "Luka", "Luke", "Martin", "Mary", "May", "Min", "Minbol", "Mingky", "Mini", "Miru", "Monica",
+                        "Moo", "Mosae", "Mumin", "Murphy", "My", "Nayl", "Nell", "Nika", "Nike", "Noah", "Noter", "Nyx", "Oliver", "One",
+                        "Onething", "Paidion", "Paran", "Paduck", "Peppr", "Pherd", "Powel", "Pray", "Presence", "Rama", "Ria", "Riel",
+                        "Rohd", "Romak", "Root", "Rundo", "Sally", "Sana", "Sandeul", "Sena", "Seo", "Sera", "Simi", "Singsing", "Sky",
+                        "Skyler", "Snow", "Soop", "Ssol", "Steve", "Taeni", "Taki", "Ted", "Tether", "Theo", "Three", "Velko", "Viera",
+                        "Wade", "Weaver", "Wendy", "Way", "Wish", "Wonjun", "Woody", "Yan", "Yeony", "Yoon", "Yoshi", "Yuha", "Yuu",
+                        "Zani", "Zhen", "Zigu"
+                    ]
+                    let learners = (try? modelContext.fetch(FetchDescriptor<LearnerProfile>())) ?? []
+                    let allNicknames = Set(learners.map { $0.nickName } + [nickname])
+                    let registeredCount = allNicknames.intersection(baseNicknames).count
                     ScrollView {
                         ProfileForm(
                             nickName: $nickName,
@@ -60,17 +133,61 @@ struct MyPage: View {
                                 profileImage = Image(uiImage: uiImage)
                             }
                         }
-                        if isEditing {
-                            Button(role: .destructive) {
-                                showDeleteConfirmation = true
-                            } label: {
-                                Text("프로필 삭제")
-                                    .foregroundColor(.red)
-                                    .padding()
+                        
+                        VStack(alignment: .leading, spacing: 7) {
+                            HStack {
+                                Text("전체 러너 수집률")
+                                    .bold()
+                                    .font(.callout)
+                                    .foregroundStyle(
+                                        LinearGradient(
+                                            gradient: Gradient(colors: [Color(hex: "F75A27"), Color(hex: "FFA98C")]),
+                                            startPoint: .leading,
+                                            endPoint: .trailing
+                                        )
+                                    )
+                                Spacer()
+                                Text("\(Int(collectionProgress * 100)) % (\(registeredCount)/180)")
+                                    .font(.caption)
+                                    .foregroundStyle(.gray.opacity(0.9))
                             }
-                            .alert("\(nickname)(이/가) 러너들과 함께 쌓아온 로그들이 사라집니다. 이대로 괜찮으시겠습니까?", isPresented: $showDeleteConfirmation) {
+                            .frame(width: 300)
+
+                            ZStack(alignment: .leading) {
+                                RoundedRectangle(cornerRadius: 10)
+                                    .frame(width: 300, height: 12)
+                                    .foregroundStyle(.gray.opacity(0.2))
+
+                                RoundedRectangle(cornerRadius: 10)
+                                    .frame(width: 300 * collectionProgress, height: 12)
+                                    .foregroundStyle(
+                                        LinearGradient(
+                                            gradient: Gradient(colors: [Color(hex: "F75A27"), Color(hex: "FFA98C")]),
+                                            startPoint: .leading,
+                                            endPoint: .trailing
+                                        )
+                                    )
+                            }
+                        }
+                        .padding(20)
+                        .background(.white, in: .rect(cornerRadius: 16))
+                        .padding(.top, 20)
+
+                        if isEditing {
+                            HStack {
+                                Spacer()
+                                Button(role: .destructive) {
+                                    showDeleteConfirmation = true
+                                } label: {
+                                    Text("초기화하기")
+                                        .foregroundColor(.red)
+                                        .padding()
+                                        .font(.footnote)
+                                }
+                            }
+                            .alert("\(nickname)이(가) 러너들과 함께 쌓아온 로그들이 사라집니다. 이대로 괜찮으시겠습니까?", isPresented: $showDeleteConfirmation) {
                                 Button("취소", role: .cancel) { }
-                                Button("삭제", role: .destructive) {
+                                Button("초기화", role: .destructive) {
                                     if let profile = profiles.first {
                                         if let learners = try? modelContext.fetch(FetchDescriptor<LearnerProfile>()) {
                                             learners.forEach { learner in

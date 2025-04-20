@@ -5,7 +5,6 @@
 //  Created by JiJooMaeng on 4/18/25.
 //
 
-
 import SwiftUI
 
 struct ProfileForm: View {
@@ -43,7 +42,6 @@ struct ProfileForm: View {
                                         .resizable()
                                         .scaledToFit()
                                         .foregroundColor(.gray)
-                                        .padding(15)
                                 )
                         }
                     }
@@ -104,7 +102,7 @@ struct ProfileForm: View {
                             .pickerStyle(.segmented)
                             .frame(width: 120)
                         } else {
-                            Text(selectedSession ?? "선택")
+                            Text((selectedSession == nil && isEditing) ? "선택" : (selectedSession ?? ""))
                         }
                     }
                     HStack {
@@ -112,7 +110,7 @@ struct ProfileForm: View {
                         Spacer()
                         if isEditing {
                             Menu {
-                                ForEach(fieldOptions, id: \.self) { type in
+                                ForEach(fieldOptions.filter { $0 != "선택" }, id: \.self) { type in
                                     Button(action: {
                                         selectedField = type
                                     }) {
@@ -121,8 +119,8 @@ struct ProfileForm: View {
                                 }
                             } label: {
                                 HStack(spacing: 4) {
-                                    Text(selectedField.isEmpty ? "선택" : selectedField)
-                                        .foregroundColor(selectedField.isEmpty ? .gray : .primary)
+                                    Text(selectedField.isEmpty && isEditing ? "선택" : selectedField)
+                                        .foregroundColor((selectedField.isEmpty && isEditing) ? .gray : .primary)
                                     Image(systemName: "chevron.down")
                                         .foregroundColor(.gray)
                                 }
@@ -146,15 +144,15 @@ struct ProfileForm: View {
                                 }
                             } label: {
                                 HStack(spacing: 4) {
-                                    Text(selectedMBTI?.rawValue ?? "선택")
-                                        .foregroundColor(selectedMBTI == nil ? .gray : .primary)
+                                    Text(selectedMBTI?.rawValue ?? (isEditing ? "선택" : ""))
+                                        .foregroundColor((selectedMBTI == nil && isEditing) ? .gray : .primary)
                                     Image(systemName: "chevron.down")
                                         .foregroundColor(.gray)
                                 }
                                 .frame(maxWidth: .infinity, alignment: .trailing)
                             }
                         } else {
-                            Text(selectedMBTI?.rawValue ?? "선택")
+                            Text(selectedMBTI?.rawValue ?? "")
                         }
                     }
                     HStack {
@@ -171,15 +169,15 @@ struct ProfileForm: View {
                                 }
                             } label: {
                                 HStack(spacing: 4) {
-                                    Text(selectedSocialStyle?.rawValue ?? "선택")
-                                        .foregroundColor(selectedSocialStyle == nil ? .gray : .primary)
+                                    Text(selectedSocialStyle?.rawValue ?? (isEditing ? "선택" : ""))
+                                        .foregroundColor((selectedSocialStyle == nil && isEditing) ? .gray : .primary)
                                     Image(systemName: "chevron.down")
                                         .foregroundColor(.gray)
                                 }
                                 .frame(maxWidth: .infinity, alignment: .trailing)
                             }
                         } else {
-                            Text(selectedSocialStyle?.rawValue ?? "선택")
+                            Text(selectedSocialStyle?.rawValue ?? "")
                         }
                     }
                 }
