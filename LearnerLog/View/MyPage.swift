@@ -90,7 +90,7 @@ struct MyPage: View {
                 
                 if let profile = profiles.first {
                     let nickname = profile.nickName
-                    let baseNicknames: Set<String> = [
+                    let baseNicknames: Set<String> = ["Air", "Alex", "Angle", "Anne", "Ari", "Avery", "Baba", "Bear", "Berry", "Bin", "Bob", "Bota", "Brandnew", "Cerin", "Cherry", "Cheshire", "Chloe", "Coulson", "Daniely", "Dean",
                         "Demian", "Dewy", "Dodin", "Echo", "Eddey", "Eifer", "Elena", "Elian", "Ell", "Ella", "Elphie", "Emma", "Enoch",
                         "Erin", "Ethan", "Evan", "Excellenty", "Fine", "Finn", "Frank", "Gabi", "Gigi", "Gil", "Glowny", "Go", "Green",
                         "Gus", "Gyeong", "Hama", "Happyjay", "Hari", "Henry", "Heggy", "Herry", "Hevyn", "Hidy", "Hong", "Hyun", "Ian",
@@ -147,7 +147,9 @@ struct MyPage: View {
                                         )
                                     )
                                 Spacer()
-                                Text("\(Int(collectionProgress * 100)) % (\(registeredCount)/180)")
+                                let allNicknames = Set(learners.map { $0.nickName } + [nickname])
+                                let registeredCount = allNicknames.intersection(baseNicknames).count
+                                Text("\(Int(collectionProgress * 100)) % (\(registeredCount)/\(baseNicknames.count))")
                                     .font(.caption)
                                     .foregroundStyle(.gray.opacity(0.9))
                             }

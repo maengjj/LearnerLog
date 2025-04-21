@@ -16,7 +16,7 @@ struct GuidePage: View {
                 Spacer().frame(height: 40)
                 
                 Image("MainTitle")
-                
+
                 VStack(alignment: .leading, spacing: 22) {
                     (Text("러너로그")
                         .foregroundColor(.accent)
